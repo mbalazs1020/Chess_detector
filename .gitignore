@@ -3,6 +3,7 @@ TEST
 
 # Release folder
 x64
+Debug
 
 #sdf file
 *.sdf
