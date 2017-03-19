@@ -105,14 +105,6 @@ namespace gamestate
 			delete *cbIt;
 		}
 
-		// Lépések memóriafelszabadítása:
-		for (vector<Step*>::iterator stIt = StepVector.begin();
-			stIt < StepVector.end();
-			stIt++)
-		{
-			delete *stIt;
-		}
-
 		// Bábu képek eldobása:
 		for (int idx1 = 0; idx1 < 2; idx1++)
 		{
@@ -172,6 +164,18 @@ namespace gamestate
 			initChessPieces(Chessboard);
 			// Tegyük el a táblát
 			ChessboardVector.push_back(Chessboard);
+
+			// Ilyenkor a GUI képet szedjük be újra, hogy tiszta legyen:
+			gameGUI = cv::imread(GUI_BASE);
+
+			// Rárajzolom az új állást
+			for (int idx1 = 0; idx1 < 8; idx1++)
+			{
+				for (int idx2 = 0; idx2 < 8; idx2++)
+				{
+					putChesspieceOnGUI(Chessboard->Fields[idx1][idx2]);
+				}
+			}
 		}
 		else // TODO ez elég erõsen refaktorra szorul, mert kurva nagy
 		{
@@ -179,7 +183,7 @@ namespace gamestate
 			int pieceCountLast = 0;
 			int pieceCountNew = 0;
 
-			// Utolsó tábla
+			// Utolsó táblát leveszem a vektorról
 			BasicChessboard* lastCb = ChessboardVector.at(ChessboardVector.size() - 1);
 
 			// Bábukat megszámolom a régi táblán
@@ -259,7 +263,12 @@ namespace gamestate
 			if (sourceFound != 1) return false;
 			if (destinationFound != 1) return false;
 
-			// TODO a step vektorba is menteni
+			// Háromból kettõ ellenõrzés a lépés elfogadára
+			if ( !(this->filter.check2oo3( *Chessboard, Source, Destination ) ) )
+				return false; // Ha nem lett jó, vagy még nincs meg a három, hazaküldöm
+
+			// Elkérem az új helyes táblát a hárombólkettõ ellenõrzõtõl
+			BasicChessboard* acceptedBoard = this->filter.getAcceptedBoard();
 
 			// Ha van különbség, akkor átmásolom a bábukat okosan
 			for (int idx1 = 0; idx1 < 8; idx1++)
@@ -277,30 +286,31 @@ namespace gamestate
 						(Destination.VerticalId == lastCb->Fields[idx1][idx2].VerticalId))
 					{
 						// Átmásolom a Source bábutípusát az új sakktábla kijelölt indexû mezõjére
-						Chessboard->Fields[idx1][idx2].ChesspieceType = Source.ChesspieceType;
+						acceptedBoard->Fields[idx1][idx2].ChesspieceType = Source.ChesspieceType;
 					}
 					else
 					{
 						// Az összes többi mezõn átmásolom a bábu típusát
-						Chessboard->Fields[idx1][idx2].ChesspieceType = lastCb->Fields[idx1][idx2].ChesspieceType;
+						acceptedBoard->Fields[idx1][idx2].ChesspieceType = lastCb->Fields[idx1][idx2].ChesspieceType;
 					}
 				}
 			}
 
 			// Elmentem az új sakktáblát
-			ChessboardVector.push_back(Chessboard);
-		}
+			ChessboardVector.push_back( new BasicChessboard( *acceptedBoard ) );
 
-		// Ilyenkor a GUI képet szedjük be újra, hogy tiszta legyen:
-		gameGUI = cv::imread(GUI_BASE);
+			// Ilyenkor a GUI képet szedjük be újra, hogy tiszta legyen:
+			gameGUI = cv::imread(GUI_BASE);
 
-		// Rárajzolom az új állást
-		for (int idx1 = 0; idx1 < 8; idx1++)
-		{
-			for (int idx2 = 0; idx2 < 8; idx2++)
+			// Rárajzolom az új állást
+			for (int idx1 = 0; idx1 < 8; idx1++)
 			{
-				putChesspieceOnGUI(Chessboard->Fields[idx1][idx2]);
+				for (int idx2 = 0; idx2 < 8; idx2++)
+				{
+					putChesspieceOnGUI(acceptedBoard->Fields[idx1][idx2]);
+				}
 			}
+
 		}
 
 		return true;
@@ -318,6 +328,77 @@ namespace gamestate
 			gameGUI.copyTo(returnPic);
 			return true;
 		}
+	}
+
+
+	// Átveszem, és megmondom, hogy jó-e már
+	bool TwoOutOfThreeFilter::check2oo3(BasicChessboard cb, BasicField source, BasicField destination)
+	{
+		if ((numberOfReceivedMoves < 2)) // Elsõ vagy második input
+		{
+			this->cb[numberOfReceivedMoves] = cb; // Elteszem a dolgokat
+			this->moves[numberOfReceivedMoves] = Move(source, destination);
+			numberOfReceivedMoves++;
+			return false;
+		}
+		else if (numberOfReceivedMoves == 2) // Harmadik input
+		{
+			this->cb[numberOfReceivedMoves] = cb; // Elteszem a dolgokat
+			this->moves[numberOfReceivedMoves] = Move(source, destination);
+			numberOfReceivedMoves = 0; // Mindenképp újra lesz kezdve, nullázom
+
+			// Csekkolom, hogy legalább kettõ egyezik-e
+			bool eq01 = (	(this->moves[0].getSource().HorizontalId == this->moves[1].getSource().HorizontalId) &&
+							(this->moves[0].getSource().VerticalId   == this->moves[1].getSource().VerticalId) &&
+							(this->moves[0].getDest().HorizontalId   == this->moves[1].getDest().HorizontalId ) &&
+							(this->moves[0].getDest().VerticalId     == this->moves[1].getDest().VerticalId));
+			bool eq02 =	(	(this->moves[0].getSource().HorizontalId == this->moves[2].getSource().HorizontalId) &&
+							(this->moves[0].getSource().VerticalId   == this->moves[2].getSource().VerticalId) &&
+							(this->moves[0].getDest().HorizontalId   == this->moves[2].getDest().HorizontalId) &&
+							(this->moves[0].getDest().VerticalId     == this->moves[2].getDest().VerticalId));
+			bool eq12 =	(	(this->moves[1].getSource().HorizontalId == this->moves[2].getSource().HorizontalId) &&
+							(this->moves[1].getSource().VerticalId   == this->moves[2].getSource().VerticalId) &&
+							(this->moves[1].getDest().HorizontalId   == this->moves[2].getDest().HorizontalId) &&
+							(this->moves[1].getDest().VerticalId     == this->moves[2].getDest().VerticalId));
+
+			if (!(eq01 || eq02 || eq12))
+			{
+				cout <<  "ERROR: 2oo3 filter didn't accept move!" << endl;
+				return false; // Ha egyik se lett jó, akkor vége
+			}
+
+			// Ha valamelyik jó lett, beállítom a tábláját elfogadottnak
+			if (eq01 || eq02)
+			{
+				delete acceptedBoard;
+				acceptedBoard =	new BasicChessboard(this->cb[0]);
+			}
+
+			else if (eq12)
+			{
+				delete acceptedBoard;
+				acceptedBoard = new BasicChessboard(this->cb[0]);
+			}
+
+			else
+			{
+				cout << "Hát ez meg hogy lehet?" << endl;
+				return false;
+			}
+
+			return true;
+		}
+		else
+		{
+			cout << "VÉGZETES HIBA A HÁROMBÓLKETTÕ FILTERBEN" << endl;
+			return false;
+		}
+	}
+
+	// Az elfogadott tábla átvétele
+	BasicChessboard* TwoOutOfThreeFilter::getAcceptedBoard(void)
+	{
+		return this->acceptedBoard;
 	}
 
 }

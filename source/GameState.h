@@ -10,14 +10,43 @@ using namespace chessboard;
 namespace gamestate
 {
 	// Lépés eltárolására képes osztály
-	class Step
+	class Move
 	{
 	private:
 		BasicField Source;
 		BasicField Destination;
 
 	public:
-		Step(){}
+		Move(){}
+		Move(BasicField Source, BasicField Destination) : Source(Source), Destination(Destination) {}
+
+		BasicField getSource(){ return Source; }
+		BasicField getDest(){ return Destination; }
+	};
+
+	// Háromból kettõ lépéselfogadás osztálya
+	class TwoOutOfThreeFilter
+	{
+	private:
+		unsigned int numberOfReceivedMoves = 0; // Ennyi elem jött be eddig
+
+		// A beérkezett lépések elrakva
+		Move moves[3];
+
+		// A beérkezett táblák elrakva
+		BasicChessboard cb[3];
+
+		// Az elfogadott tábla
+		BasicChessboard* acceptedBoard;
+
+	public:
+		TwoOutOfThreeFilter(){}
+
+		// Átveszem, és megmondom, hogy jó-e már
+		bool check2oo3(BasicChessboard cb, BasicField source, BasicField destination); 
+
+		// Az elfogadott tábla átvétele
+		BasicChessboard* getAcceptedBoard(void);
 	};
 
 	// Játékállás osztálya
@@ -30,8 +59,9 @@ namespace gamestate
 
 		// Ebbe mentjük az új sakktáblát minden változásnál
 		vector<BasicChessboard*> ChessboardVector;
-		// Ebbe mentjük a lépéseket
-		vector<Step*> StepVector;
+
+		// Saját háromból kettõ szûrõ a lépéselfogadásra
+		TwoOutOfThreeFilter filter;
 
 		// GUI képek beolvasása
 		void initPieceGUIPics(void);
@@ -40,14 +70,14 @@ namespace gamestate
 		void putChesspieceOnGUI( BasicField Field );
 
 		// Bábuk inicializálása, elsõ tábla
-		void initChessPieces(BasicChessboard* Chessboard);
+		void initChessPieces(BasicChessboard* Chessboard); 
 
 
 	public:
 		// Konstruktor
 		GameState();
 
-		// Tábla hozzáadása, lépés kielemzése
+		// Lépés kielemzése, tábla elmentése, ha történt új lépés
 		bool storeChessboard(BasicChessboard* Chessboard);
 
 		// Elkérjük a GUI-ként kirajzolandó képet:

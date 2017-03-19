@@ -318,8 +318,8 @@ namespace control
 		// Mennyi az idõ:
 		ActualTime = clock();
 
-		// Ha már 1 másodperc letelt:
-		if ((ActualTime - LastSampleTime) > 1000)
+		// Ha már a mintavételi idõ letelt:
+		if ((ActualTime - LastSampleTime) > SAMPLING_TIME_MS)
 		{
 			LastSampleTime = ActualTime;
 			return true;

@@ -13,6 +13,9 @@
 // Kamera input
 #define CAMERA_ID  1
 
+// A sakklépés figyelõ mintavételi ideje (ms)
+#define SAMPLING_TIME_MS   200
+
 // FPS:
 #define FPS  9   // Frames per sec az input videóban
 

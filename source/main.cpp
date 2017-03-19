@@ -36,11 +36,9 @@ using namespace control;
 // Main függvény
 int main( void )
 {
-//	InputPicture inputPic(1);                    // Aktuális frame tárolója <----------------------------------IDE ÍRD BE !!!!!!!!!!!!!!!!
-//	Mat Picture;                                 // Aktuális kép
-	Control myChessController(VIDEO_1);                   // Mintavétel irányító osztály  
+	Control myChessController(VIDEO_1);          // Irányító osztály létrehozása
 
 	while (myChessController.runMainCycle());    // Futás végtelen ciklusa
-
+	
 	return 0;
 }

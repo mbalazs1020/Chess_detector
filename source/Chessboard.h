@@ -71,6 +71,9 @@ namespace chessboard
 		// Mezõi
 		BasicField Fields[8][8];
 
+		// Default konstruktor
+		BasicChessboard(){}
+
 		// Létrehozása
 		BasicChessboard(Chessboard Chessboard);
 
