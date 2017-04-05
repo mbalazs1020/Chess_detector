@@ -73,6 +73,12 @@ namespace control
 		// Mûködtetõ függvény:
 		bool runMainCycle(void);
 
+		// Tábla fel van-e már állítva?
+		bool isGameDetectionRunning()
+		{
+			return (State == RUN) ? true : false;
+		}
+
 		// Képet visszaadó függvény:
 		cv::Mat getPicture() { return ChessboardPicture; }
 

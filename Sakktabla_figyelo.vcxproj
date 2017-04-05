@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Chessboard.cpp" />
+    <ClCompile Include="source\ChessMessage.cpp" />
     <ClCompile Include="source\Control.cpp" />
     <ClCompile Include="source\Field.cpp" />
     <ClCompile Include="source\GameState.cpp" />
@@ -28,6 +29,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\Chessboard.h" />
+    <ClInclude Include="source\ChessMessage.h" />
     <ClInclude Include="source\Control.h" />
     <ClInclude Include="source\Field.h" />
     <ClInclude Include="source\GameState.h" />
