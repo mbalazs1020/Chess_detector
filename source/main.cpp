@@ -4,7 +4,6 @@
 #include <time.h>
 #include <stdio.h>
 #include <winsock2.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <thread>
 
@@ -18,9 +17,9 @@
 #include "InputPicture.h"
 #include "Field.h"
 #include "Chessboard.h"
+#include "ChessMessage.h"
 #include "GameState.h"
 #include "Control.h"
-#include "ChessMessage.h"
 
 // Értelmetlen errorok kiküszöbölése
 #ifndef _CRT_SECURE_NO_WARNINGS
@@ -40,11 +39,16 @@ using namespace chess_message;
 
 // Globális változók
 ChessMessage   myChessMessageController;          // Java sakkjátékkal kapcsolatot tartó osztályom, globális, hogy a thread is lássa
+bool tcpRunning = true;
 
+// Ebben fut a TCP fogadás
 void ChessMessageMainCycleThread()
 {
-	//myChessMessageController.ChessCoreMessageCycle();
-	cout << "A thread elindult" << endl;
+	cout << "A TCP thread elindult" << endl;
+	while (tcpRunning) // Végtelen
+	{
+		tcpRunning = myChessMessageController.ChessCoreMessageCycle();
+	}
 }
 
 // Main függvény
@@ -62,10 +66,20 @@ int main( void )
 		{
 			if (!myChessMessageController.isConnectedToJavaChessCore()) // Ha még nem kapcsolódtam
 			{
-				isStillRunning = myChessMessageController.connectToJavaChessCore();  // Kapcsolódok
-				thread thr(ChessMessageMainCycleThread); // Threadet megnyitom, ahol a TCP fogadás megy
+				// Kapcsolódok
+				isStillRunning = myChessMessageController.connectToJavaChessCore();
+
+				// Threadet megnyitom, ahol a TCP fogadás megy
+				thread thr(ChessMessageMainCycleThread);
+				thr.detach(); // Démomba teszem, menjen külön a többitõl.
+
+				// Ledobom a referenciát a képfelismerõnek, hogy küldhessen
+				myChessController.setJavaCoreReference(&myChessMessageController);
 			}
 		}
+
+		if (!tcpRunning) // Ha a TCP-ben hiba volt, azonnal kiléptetek mindent
+			return -1;
 	}
 	
 	return 0;

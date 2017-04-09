@@ -3,6 +3,7 @@
 
 #include "PictureConsts.h"
 
+using namespace chess_message;
 using namespace std;
 using namespace field;
 using namespace chessboard;
@@ -38,6 +39,7 @@ namespace gamestate
 
 		// Az elfogadott tábla
 		BasicChessboard* acceptedBoard;
+		Move             acceptedMove;
 
 	public:
 		TwoOutOfThreeFilter(){}
@@ -47,12 +49,19 @@ namespace gamestate
 
 		// Az elfogadott tábla átvétele
 		BasicChessboard* getAcceptedBoard(void);
+
+		// Az elfogadott lépés átvétele
+		Move getAcceptedMove(void);
 	};
 
 	// Játékállás osztálya
 	class GameState
 	{
 	private:
+		// Adok neki egy referenciát a TCP kapcsolattartóhoz, hogy tudjon küldeni
+		ChessMessage* myJavaCoreReference = NULL;
+		bool isJavaCoreSet = false;
+
 		// GUI képei:
 		cv::Mat gameGUI = cv::imread(GUI_BASE);
 		cv::Mat* pieceGUIPics[2][6][2];
@@ -82,6 +91,9 @@ namespace gamestate
 
 		// Elkérjük a GUI-ként kirajzolandó képet:
 		bool getGameGUI(cv::Mat& returnPic);
+
+		// Beállítok referenciát a gamestate-re
+		void setJavaCoreReference(ChessMessage* pChMess);
 
 		// Destruktor:
 		~GameState();

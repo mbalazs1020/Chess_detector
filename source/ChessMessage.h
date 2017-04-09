@@ -32,6 +32,11 @@ namespace chess_message
 		// Kapcsolódás megvolt-e
 		bool isConnectedToJavaChessCore(){ return isConnectedToJava; }
 
+		// Ezzel küldheti el a lépést, és majd én eldöntöm, hogy milyet
+		void sendMoveToJavaChessCore( char* movStart, char* movEnd );
+
+	private: // Ezek már csak belülrõl hívhatom
+
 		// ACK üzenet küldése
 		void sendAck( char* movStart, char* movEnd );
 

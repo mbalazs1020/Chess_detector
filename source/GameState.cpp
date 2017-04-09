@@ -4,7 +4,8 @@
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
+#include <winsock2.h>
+#include <string>
 
 // OpenCV inklúdok:
 #include <opencv2/core/core.hpp>
@@ -13,6 +14,7 @@
 #include <opencv2/highgui/highgui.hpp>
 
 // Saját osztályaim inklúd:
+#include "ChessMessage.h"
 #include "Field.h"
 #include "Chessboard.h"
 
@@ -267,8 +269,20 @@ namespace gamestate
 			if ( !(this->filter.check2oo3( *Chessboard, Source, Destination ) ) )
 				return false; // Ha nem lett jó, vagy még nincs meg a három, hazaküldöm
 
-			// Elkérem az új helyes táblát a hárombólkettõ ellenõrzõtõl
+			// Elkérem az új helyes táblát a hárombólkettõ ellenõrzõtõl  <<<<<<<<<<<<<<<<<<<< ITT VAN A LÉNYEG, ITT FOGADTAM EL A LÉPÉST!!!!!!!!!!!!!!!!!!!!
 			BasicChessboard* acceptedBoard = this->filter.getAcceptedBoard();
+
+			// Elküldöm a TCP kapcsolaton, ha van
+			if (isJavaCoreSet)
+			{
+				Move acceptedMove = this->filter.getAcceptedMove();
+				String fieldCodeSource = acceptedMove.getSource().getFieldCodeString();
+				char movStart[3] = { fieldCodeSource[0], fieldCodeSource[1], '\0' };
+				String fieldCodeDest = acceptedMove.getDest().getFieldCodeString();
+				char movEnd[3] = { fieldCodeDest[0], fieldCodeDest[1], '\0' };
+
+				myJavaCoreReference->sendMoveToJavaChessCore(movStart, movEnd);  // <<<<<<<<<<<<<<<<<ITT KÜLDTEM EL
+			}
 
 			// Ha van különbség, akkor átmásolom a bábukat okosan
 			for (int idx1 = 0; idx1 < 8; idx1++)
@@ -372,12 +386,14 @@ namespace gamestate
 			{
 				delete acceptedBoard;
 				acceptedBoard =	new BasicChessboard(this->cb[0]);
+				acceptedMove = moves[0];
 			}
 
 			else if (eq12)
 			{
 				delete acceptedBoard;
 				acceptedBoard = new BasicChessboard(this->cb[0]);
+				acceptedMove = moves[1];
 			}
 
 			else
@@ -401,4 +417,17 @@ namespace gamestate
 		return this->acceptedBoard;
 	}
 
+	// Az elfogadott lépés átvétele
+	Move TwoOutOfThreeFilter::getAcceptedMove(void)
+	{
+		return acceptedMove;
+	}
+
+	// Beállítok referenciát a gamestate-re
+	void GameState::setJavaCoreReference(ChessMessage* pChMess)
+	{ 
+		this->myJavaCoreReference = pChMess;
+		isJavaCoreSet = true;
+	}
+	
 }

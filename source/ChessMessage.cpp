@@ -70,6 +70,15 @@ namespace chess_message
 			return true;
 	}
 
+	// Ezzel küldheti el a lépést, és majd én eldöntöm, hogy milyet
+	void  ChessMessage::sendMoveToJavaChessCore( char* movStart, char* movEnd )
+	{
+		if (isRequestInProgress)
+			sendAck(movStart, movEnd);
+		else
+			sendReq(movStart, movEnd);
+	}
+
 	// Bejövõ üzenet feldolgozása
 	void ChessMessage::handleIncomingMessage(char mess[], int size)
 	{
@@ -179,6 +188,7 @@ namespace chess_message
 											cout << "Message is valid." << endl;
 											// TODO üzenet feldolgozása:
 											   // CSAK REQ lehet, amit kap. Itt bebillentek egy bitet, hogy van-e ACK nélküli  REQ  
+											isRequestInProgress = true;
 											// Visszaküldés most átmenetileg
 
 											sendAck(moveSource, moveDest);
@@ -225,6 +235,15 @@ namespace chess_message
 		toSend[19] = '\0'; // Meg egy retkes nullát is a végére, hogy boldog legyen
 		len += 4;
 
+		isRequestInProgress = false; // Már nincs folyamatban a várakozás a túloldal részérõl
+
+		cout << "Lépés acknowledgement elküldve TCP-n.";
+		for (int i = 0; i < len; i++)
+		{
+			cout << toSend[i];
+		}
+		cout << endl;
+
 		sendMsg(toSend, len);
 	}
 
@@ -254,6 +273,13 @@ namespace chess_message
 		toSend[16] = 'E'; toSend[17] = 'N'; toSend[18] = 'D';
 		toSend[19] = '\0'; // Meg egy retkes nullát is a végére, hogy boldog legyen
 		len += 4;
+
+		cout << "Lépés request elküldve TCP-n.";
+		for (int i = 0; i < len; i++)
+		{
+			cout << toSend[i];
+		}
+		cout << endl;
 
 		sendMsg(toSend, len);
 	}

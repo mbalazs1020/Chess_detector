@@ -4,7 +4,8 @@
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
+#include <winsock2.h>
+#include <string>
 
 // OpenCV inklúdok:
 #include <opencv2/core/core.hpp>
@@ -16,6 +17,7 @@
 #include "InputPicture.h"
 #include "Field.h"
 #include "Chessboard.h"
+#include "ChessMessage.h"
 #include "GameState.h"
 
 // Saját header:

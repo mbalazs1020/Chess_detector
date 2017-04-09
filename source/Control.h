@@ -10,6 +10,7 @@ using namespace input_picture;
 using namespace field;
 using namespace chessboard;
 using namespace gamestate;
+using namespace chess_message;
 
 
 namespace control
@@ -72,6 +73,9 @@ namespace control
 
 		// Mûködtetõ függvény:
 		bool runMainCycle(void);
+
+		// Beállítja a referenciát a TCP kapcsolattartóra a GameState osztályodnak
+		void setJavaCoreReference(ChessMessage* pChessMessage) { gameState.setJavaCoreReference(pChessMessage); }
 
 		// Tábla fel van-e már állítva?
 		bool isGameDetectionRunning()
