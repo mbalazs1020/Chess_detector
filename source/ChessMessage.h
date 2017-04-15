@@ -3,7 +3,11 @@
 
 using namespace std;
 
-#define HOME_IP  (  "192.168.1.68"  ) // TODO kitenni majd konstansokba
+// Saját IP címem attól függõen, hogy hol vagyok
+#define HOME_IP_BUDAPEST (  "192.168.1.68"  )
+#define HOME_IP_SZOLNOK  (  "192.168.0.101" )
+
+#define HOME_IP  HOME_IP_SZOLNOK // TODO kitenni majd konstansokba
 
 namespace chess_message
 {
@@ -14,6 +18,7 @@ namespace chess_message
 	const char actionAck[4] = "ACK";
 	const char hitTypeHit[4] = "HIT";
 	const char hitTypeNoHit[4] = "---";
+
 
 	// Sakkjáték üzenet elõállító, feldolgozó
 	class ChessMessage
@@ -44,7 +49,7 @@ namespace chess_message
 		void sendReq(char* movStart, char* movEnd);
 
 		// Üzenet küldése alacsony szinten
-		void sendMsg(char* mess, int len);
+		bool sendMsg();
 
 
 	//========================= Privát tartalom   ========================//
@@ -63,10 +68,15 @@ namespace chess_message
 		int recv_size = 2000;
 		string str;
 
+		// Bufferbe teszem a küldöttet, nehogy szinkron problémák legyenek, majd a thread-bõl küldöm ki
+		char arrayToSend[30];
+		int sendLength = 0;
+		bool sendAwaiting = false;
+		void sendSync(char* msg, int len);
 
-		char arrayReceivedChars[30]; // Ebbe gyûjtöm ami bejött
-		int numberOfReceivedChars = 0;
-		int numberOfProcessedChars = 0;
+		// Ebbe gyûjtöm ami bejött
+		int accumulatedReceiveSize = 0;
+		char buf[30];
 
 		// Üzenet egyes részeinek jó megérkezését jelzõ flagek
 		bool startAccepted  = false;

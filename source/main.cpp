@@ -45,9 +45,14 @@ bool tcpRunning = true;
 void ChessMessageMainCycleThread()
 {
 	cout << "A TCP thread elindult" << endl;
+	long time = clock();
 	while (tcpRunning) // Végtelen
 	{
-		tcpRunning = myChessMessageController.ChessCoreMessageCycle();
+		if ((clock() - time) > 10) // 10 ms-enként fogadok, legyen idõ feldolgozni
+		{
+			tcpRunning = myChessMessageController.ChessCoreMessageCycle();
+			time = clock();
+		}
 	}
 }
 
@@ -68,13 +73,15 @@ int main( void )
 			{
 				// Kapcsolódok
 				isStillRunning = myChessMessageController.connectToJavaChessCore();
+				if (isStillRunning)
+				{
+					// Threadet megnyitom, ahol a TCP fogadás megy
+					thread thr(ChessMessageMainCycleThread);
+					thr.detach(); // Démomba teszem, menjen külön a többitõl.
 
-				// Threadet megnyitom, ahol a TCP fogadás megy
-				thread thr(ChessMessageMainCycleThread);
-				thr.detach(); // Démomba teszem, menjen külön a többitõl.
-
-				// Ledobom a referenciát a képfelismerõnek, hogy küldhessen
-				myChessController.setJavaCoreReference(&myChessMessageController);
+					// Ledobom a referenciát a képfelismerõnek, hogy küldhessen
+					myChessController.setJavaCoreReference(&myChessMessageController);
+				}
 			}
 		}
 

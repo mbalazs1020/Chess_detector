@@ -1,7 +1,9 @@
 #include <iostream>
 #include <time.h>
+#include <errno.h>
 #include <stdio.h>
 #include <winsock2.h>
+#include <fcntl.h>
 #include <string>
 #include "ChessMessage.h"
 
@@ -14,6 +16,8 @@ namespace chess_message
 
 	bool ChessMessage::connectToJavaChessCore()
 	{
+		u_long nonblock = 1;
+
 		printf("\nInitialising Winsock...");
 		if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
 		{
@@ -45,29 +49,59 @@ namespace chess_message
 		}
 
 		puts("Connected");
+
+		/* Set socket to non-blocking */
+		if (ioctlsocket(s, FIONBIO, &nonblock) < 0)
+		{
+			cout << "NEM SIKERÜLT A NONBLOKKOLÁS";
+			return false;
+		}
+
 		isConnectedToJava = true;
 		return true;
 	}
 
 	bool ChessMessage::ChessCoreMessageCycle()
 	{			
+		if (sendAwaiting) // Küldés
+		{
+			return sendMsg();
+		}
+		else // Fogadás
+		{
 			recv_size = recv(s, server_reply, 2000, 0);
 			if (recv_size == SOCKET_ERROR)
 			{
-				puts("recv failed");
-				return false;
+				//puts("recv failed"); // TODO valahogy szét kellene választani, hogy ez hiba, vagy csak nonblocking kilépés. De hogy?
+				//return false;
+				return true;
 			}
-			else if (recv_size == 0)
+			else if (recv_size == WSAENOTCONN)
 			{
 				puts("Connection closed.");
 				return false;
 			}
 			else
 			{
-				handleIncomingMessage(server_reply, recv_size);
-				return true;
+				cout << "____________NYERS UZENET JOTT::: ";
+				for (int i = 0; i < recv_size; i++)
+				{
+					cout << server_reply[i];
+				}
+				cout << endl;
+
+				// Összerakom az üzenetet
+				memcpy(&buf[accumulatedReceiveSize], server_reply, recv_size);
+				accumulatedReceiveSize += recv_size;
+
+				if (accumulatedReceiveSize >= 23)
+				{
+					handleIncomingMessage(buf, accumulatedReceiveSize);
+					accumulatedReceiveSize = 0;
+				}
 			}
 			return true;
+		}
 	}
 
 	// Ezzel küldheti el a lépést, és majd én eldöntöm, hogy milyet
@@ -82,25 +116,40 @@ namespace chess_message
 	// Bejövõ üzenet feldolgozása
 	void ChessMessage::handleIncomingMessage(char mess[], int size)
 	{
-		static unsigned int time = 0; // Timeout
-		static bool timeoutStarted = false;
-
-		// Timeout, ami a hülyeség ellen is véd talán
-		if (!timeoutStarted)
+		// START és END legyen benne, ettõl egységes
+		if (strncmp(&mess[0], startSequence, 5) != 0) // Start benne van
 		{
-			time = clock(); // Timeout indul
-			timeoutStarted = true;
-		}
-		else
-		{
-			if ((clock() - time) > 2000)
-			{
-				cout << "LAST RECEIVE TIMEOUTED" << endl;
-				timeoutStarted = false;
-				startNewMessageWaiting();
-			}
+			cout << "START nincs benne!" << endl;
+			return;
 		}
 
+		if (strncmp(&mess[20], finishSequence, 3) != 0)
+		{
+			cout << "END nincs benne!" << endl;
+			return;
+		}
+
+		// REQ legyen, ACK-t nem fogadom el
+		if (strncmp(&mess[6], actionReq, 3) != 0)
+		{
+			cout << "REQ nincs benne!" << endl;
+			return;
+		}
+
+		// Kipakolom az adatokat
+		memcpy(&moveSource[0], &mess[10], 2);
+		memcpy(&moveDest[0], &mess[13], 2);
+		memcpy(&hitType[0], &mess[16], 3);
+
+
+		isRequestInProgress = true; // MEgjegyzem, hogy még vissza kell igazolni
+
+		// TODO lépést megtenni Visszaküldés most átmenetileg
+		//sendAck(moveSource, moveDest);
+		cout << "MSG ACKED" << endl;
+
+		//-----------------------------------------------
+		/*
 		// Elteszem magamnak
 		memcpy(&arrayReceivedChars[numberOfReceivedChars], &mess[0], size);
 		numberOfReceivedChars += size;
@@ -197,7 +246,6 @@ namespace chess_message
 											cout << "MSG ACKED" << endl;
 
 											// Új kezdet
-											timeoutStarted = false;
 											startNewMessageWaiting();
 										}
 									}
@@ -207,7 +255,7 @@ namespace chess_message
 					}
 				}
 			}
-		}
+		} */
 	}
 
 
@@ -237,14 +285,7 @@ namespace chess_message
 
 		isRequestInProgress = false; // Már nincs folyamatban a várakozás a túloldal részérõl
 
-		cout << "Lépés acknowledgement elküldve TCP-n.";
-		for (int i = 0; i < len; i++)
-		{
-			cout << toSend[i];
-		}
-		cout << endl;
-
-		sendMsg(toSend, len);
+		sendSync(toSend, len);
 	}
 
 
@@ -274,26 +315,40 @@ namespace chess_message
 		toSend[19] = '\0'; // Meg egy retkes nullát is a végére, hogy boldog legyen
 		len += 4;
 
-		cout << "Lépés request elküldve TCP-n.";
-		for (int i = 0; i < len; i++)
-		{
-			cout << toSend[i];
-		}
-		cout << endl;
+		sendSync(toSend, len);
+	}
 
-		sendMsg(toSend, len);
+	void ChessMessage::sendSync( char* msg, int len )
+	{
+		memcpy(&arrayToSend, msg, len);
+		arrayToSend[len] = '\0';
+		sendLength = len;
+		sendAwaiting = true;
+		cout << endl << "Sending request started..." << endl;
+		//sendMsg();
 	}
 
 
 	// Üzenet küldése alacsony szinten
-	void ChessMessage::sendMsg(char* msg, int len)
+	bool ChessMessage::sendMsg()
 	{
-		msg[len] = '\n'; // Sorvéget ráillesztem, mert a Javás fogadó azt szereti
+		cout << "MESSAGE SENDING: ";
+		for (int i = 0; i < sendLength; i++)
+		{
+			cout << arrayToSend[i];
+		}
+		cout << endl;
 
-		if ( send(s, msg, (len + 1) , 0) < 0 )
+		arrayToSend[sendLength] = '\n'; // Sorvéget ráillesztem, mert a Javás fogadó azt szereti
+
+		if (send(s, arrayToSend, (sendLength + 1), 0) < 0)
 		{
 			puts("Send failed");
+			return false;
 		}
+		sendAwaiting = false;
+		cout << "SENDING HAPPENED FOR REAL" << endl << endl;
+		return true;
 	}
 
 
@@ -324,7 +379,7 @@ namespace chess_message
 		return false;
 	}
 
-	void ChessMessage::startNewMessageWaiting()
+	/*void ChessMessage::startNewMessageWaiting()
 	{
 		numberOfReceivedChars = 0;
 		numberOfProcessedChars = 0;
@@ -336,6 +391,6 @@ namespace chess_message
 		moveDestAccepted = false;
 		hitTypeAccepted = false;
 		endAccepted = false;
-	}
+	} */
 
 }
