@@ -7,6 +7,14 @@
 #include <string>
 #include "ChessMessage.h"
 
+extern "C"
+{
+#include "robothandler\\types.h"
+#include "robothandler\\consts.h"
+#include "robothandler\\modbus_driver.h"
+#include "robothandler\\robothandler.h"
+}
+
 using namespace std;
 
 namespace chess_message
@@ -144,9 +152,10 @@ namespace chess_message
 
 		isRequestInProgress = true; // MEgjegyzem, hogy még vissza kell igazolni
 
-		// TODO lépést megtenni Visszaküldés most átmenetileg
-		//sendAck(moveSource, moveDest);
-		cout << "MSG ACKED" << endl;
+		// Lépést megtenni Visszaküldés most átmenetileg
+#ifdef PLC_IS_ON
+		moveRobotModbus(moveSource, moveDest, hitType);
+#endif
 
 		//-----------------------------------------------
 		/*

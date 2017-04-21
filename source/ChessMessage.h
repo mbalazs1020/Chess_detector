@@ -6,8 +6,9 @@ using namespace std;
 // Saját IP címem attól függõen, hogy hol vagyok
 #define HOME_IP_BUDAPEST (  "192.168.1.68"  )
 #define HOME_IP_SZOLNOK  (  "192.168.0.101" )
+#define LABOR_IP         (  "192.168.0.102" )
 
-#define HOME_IP  HOME_IP_SZOLNOK // TODO kitenni majd konstansokba
+#define HOME_IP  LABOR_IP // TODO kitenni majd konstansokba
 
 namespace chess_message
 {

@@ -26,6 +26,12 @@
     <ClCompile Include="source\GameState.cpp" />
     <ClCompile Include="source\InputPicture.cpp" />
     <ClCompile Include="source\main.cpp" />
+    <ClCompile Include="source\robothandler\modbus\modbus-data.c" />
+    <ClCompile Include="source\robothandler\modbus\modbus-rtu.c" />
+    <ClCompile Include="source\robothandler\modbus\modbus-tcp.c" />
+    <ClCompile Include="source\robothandler\modbus\modbus.c" />
+    <ClCompile Include="source\robothandler\modbus_driver.c" />
+    <ClCompile Include="source\robothandler\robothandler.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\Chessboard.h" />
@@ -35,6 +41,21 @@
     <ClInclude Include="source\GameState.h" />
     <ClInclude Include="source\InputPicture.h" />
     <ClInclude Include="source\PictureConsts.h" />
+    <ClInclude Include="source\robothandler\consts.h" />
+    <ClInclude Include="source\robothandler\modbus\config.h" />
+    <ClInclude Include="source\robothandler\modbus\modbus-private.h" />
+    <ClInclude Include="source\robothandler\modbus\modbus-rtu-private.h" />
+    <ClInclude Include="source\robothandler\modbus\modbus-rtu.h" />
+    <ClInclude Include="source\robothandler\modbus\modbus-tcp-private.h" />
+    <ClInclude Include="source\robothandler\modbus\modbus-tcp.h" />
+    <ClInclude Include="source\robothandler\modbus\modbus-version.h" />
+    <ClInclude Include="source\robothandler\modbus\modbus.h" />
+    <ClInclude Include="source\robothandler\modbus_driver.h" />
+    <ClInclude Include="source\robothandler\robothandler.h" />
+    <ClInclude Include="source\robothandler\types.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="source\robothandler\modbus\Makefile.am" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{B05D626F-1F6A-4E9B-83E7-12FCE1C5183D}</ProjectGuid>

@@ -21,6 +21,14 @@
 #include "GameState.h"
 #include "Control.h"
 
+extern "C" 
+{
+#include "robothandler\\types.h"
+#include "robothandler\\consts.h"
+#include "robothandler\\modbus_driver.h"
+#include "robothandler\\robothandler.h"
+}
+
 // Értelmetlen errorok kiküszöbölése
 #ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
@@ -61,6 +69,13 @@ int main( void )
 {
 	bool isStillRunning = true;  // Még fut-e a fõ ciklus, nem volt-e hiba
 	Control        myChessController(VIDEO_1);          // Játékfigyelés irányító osztály létrehozása
+	//Control        myChessController;          // Játékfigyelés irányító osztály létrehozása
+
+	// PLC csatlakozás
+#ifdef PLC_IS_ON
+	cout << "PLC kapcsolódás bekapcsolva." << endl;
+	isStillRunning = connectRobotModbus() ? true : false;
+#endif
 	
 	// Futás végtelen ciklusa: ameddig valami hibával lép vissza
 	while (isStillRunning)

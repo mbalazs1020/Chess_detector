@@ -126,6 +126,7 @@ namespace control
 					if (gameState.getGameGUI(gameGUI))
 					{
 						cv::imshow("GUI" , gameGUI);
+						cv::moveWindow("GUI", 30, 30);
 						waitKey(WAITKEY_TIME);
 					}
 
@@ -133,6 +134,7 @@ namespace control
 					ChessboardPicture = Cb.getPicture();
 					// Rajzoljuk ki a képet:
 					imshow("Picture", ChessboardPicture);
+					cv::moveWindow("Picture", 30, 30);
 					// Lehetõség kilépésre:
 					const char key = waitKey(WAITKEY_TIME);
 					if (key == 27) // Escape gomb
@@ -145,6 +147,7 @@ namespace control
 				{
 					// Rajzoljuk ki a nyers:
 					imshow("Picture", RawPicture);
+					cv::moveWindow("Picture", 30, 30);
 					// Lehetõség kilépésre:
 					const char key = waitKey(WAITKEY_TIME);
 					if (key == 27) // Escape gomb
@@ -187,6 +190,7 @@ namespace control
 
 					// Rajzoljuk ki a képet:
 					imshow("Picture", RawPicture);
+					cv::moveWindow("Picture", 30, 30);
 
 					// Lehetõség kilépésre:
 					key = waitKey(WAITKEY_TIME);
@@ -222,6 +226,7 @@ namespace control
 
 			// Rajzoljuk ki a képet:
 			imshow("Picture", RawPicture);
+			cv::moveWindow("Picture", 30, 30);
 			waitKey(WAITKEY_TIME);
 
 			// Sakktábla létrehozás
@@ -277,6 +282,7 @@ namespace control
 
 					// Rajzoljuk ki a képet:
 					imshow("Picture", RawPicture);
+					cv::moveWindow("Picture", 30, 30);
 
 					// Lehetõség kilépésre:
 					const char key = waitKey(WAITKEY_TIME);
