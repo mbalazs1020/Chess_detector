@@ -262,8 +262,8 @@ namespace gamestate
 			if (difference == false) return false;
 
 			// Mindkettõbõl csak egy lehet
-			if (sourceFound != 1) return false;
-			if (destinationFound != 1) return false;
+			if ( !( (sourceFound == 1) && (destinationFound == 1) )) return false;
+
 
 			// Háromból kettõ ellenõrzés a lépés elfogadára
 			if ( !(this->filter.check2oo3( *Chessboard, Source, Destination ) ) )

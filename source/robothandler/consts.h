@@ -2,7 +2,7 @@
 #define __CONSTS_H__
 
 // Fordítási kapcsoló, megvan-e a robotom
-//#define PLC_IS_ON
+#define PLC_IS_ON
 
 
 // PLC kapcsolat

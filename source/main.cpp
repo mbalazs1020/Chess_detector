@@ -68,8 +68,8 @@ void ChessMessageMainCycleThread()
 int main( void )
 {
 	bool isStillRunning = true;  // Még fut-e a fõ ciklus, nem volt-e hiba
-	Control        myChessController(VIDEO_1);          // Játékfigyelés irányító osztály létrehozása
-	//Control        myChessController;          // Játékfigyelés irányító osztály létrehozása
+	//Control        myChessController(VIDEO_1);          // Játékfigyelés irányító osztály létrehozása
+	Control        myChessController;          // Játékfigyelés irányító osztály létrehozása
 
 	// PLC csatlakozás
 #ifdef PLC_IS_ON
